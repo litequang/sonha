@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+
+  <!-- Inner Content Group -->
+  <g filter="url(#shadow)">
+    <!-- House Roof -->
+    <path d="M256 112L120 224H164V368C164 381.255 174.745 392 188 392H324C337.255 392 348 381.255 348 368V224H392L256 112Z" fill="#FFFFFF" fill-opacity="0.95" />
+    
+    <!-- Doorway/Vault Arch -->
+    <path d="M220 392V296C220 276.118 236.118 260 256 260C275.882 260 292 276.118 292 296V392H220Z" fill="#E2E8F0" />
+
+    <!-- Coin in Center -->
+    <circle cx="256" cy="220" r="48" fill="url(#coinGrad)" stroke="#FFFFFF" stroke-width="6" />
+    <!-- Vietnamese Currency Symbol đ -->
+    <text x="256" y="235" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="44" fill="#FFFFFF" text-anchor="middle">đ</text>
+  </g>
+</svg>

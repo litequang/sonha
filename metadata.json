@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Sổ Nhà - Quản Lý Tài Chính Gia Đình",
+  "description": "Ứng dụng quản lý tài chính, thu chi, ngân sách và mục tiêu tiết kiệm dành cho gia đình Việt. Hoạt động offline-first, nhanh chóng và bảo mật.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

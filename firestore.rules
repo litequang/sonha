@@ -1,0 +1,173 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection health check
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isHouseholdCreator(householdId) {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/households/$(householdId)).data.createdBy == request.auth.uid;
+    }
+
+    function isHouseholdMember(householdId) {
+      return isSignedIn() && (
+        isHouseholdCreator(householdId) ||
+        exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid))
+      );
+    }
+
+    function isHouseholdOwner(householdId) {
+      return isSignedIn() && (
+        isHouseholdCreator(householdId) ||
+        (exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)).data.role == 'owner')
+      );
+    }
+
+    function isHouseholdWriter(householdId) {
+      return isSignedIn() && (
+        isHouseholdOwner(householdId) ||
+        (exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)).data.role in ['owner', 'member'])
+      );
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isUser(userId);
+      allow list: if false; // PII isolation: users cannot list user table
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if isUser(userId);
+    }
+
+    // Households collection
+    match /households/{householdId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        resource.data.createdBy == request.auth.uid ||
+        request.resource.data.createdBy == request.auth.uid ||
+        isHouseholdMember(householdId)
+      );
+      allow delete: if isSignedIn() && (
+        resource.data.createdBy == request.auth.uid ||
+        isHouseholdOwner(householdId)
+      );
+
+      // Members subcollection
+      match /members/{memberUid} {
+        allow get: if isSignedIn() && (isHouseholdMember(householdId) || isUser(memberUid));
+        allow list: if isHouseholdMember(householdId);
+        allow create, update: if isSignedIn() && (
+          isHouseholdOwner(householdId) ||
+          request.auth.uid == memberUid ||
+          isHouseholdCreator(householdId)
+        );
+        allow delete: if isHouseholdOwner(householdId) || isUser(memberUid);
+      }
+
+      // Transactions subcollection
+      match /transactions/{transactionId} {
+        allow get, list: if isHouseholdMember(householdId);
+        allow create: if isSignedIn() && (
+          request.resource.data.createdBy == request.auth.uid ||
+          isHouseholdWriter(householdId)
+        ) && 
+          request.resource.data.amount >= 0 && 
+          request.resource.data.type in ['expense', 'income', 'transfer'];
+        allow update: if isHouseholdWriter(householdId) &&
+          request.resource.data.amount >= 0 &&
+          request.resource.data.type in ['expense', 'income', 'transfer'];
+        allow delete: if isHouseholdWriter(householdId);
+      }
+
+      // Categories subcollection
+      match /categories/{categoryId} {
+        allow get, list: if isHouseholdMember(householdId);
+        allow create: if isSignedIn() && (
+          request.resource.data.createdBy == request.auth.uid ||
+          isHouseholdWriter(householdId)
+        );
+        allow update, delete: if isHouseholdWriter(householdId);
+      }
+
+      // Accounts subcollection
+      match /accounts/{accountId} {
+        allow get, list: if isHouseholdMember(householdId);
+        allow create: if isSignedIn() && (
+          request.resource.data.createdBy == request.auth.uid ||
+          isHouseholdWriter(householdId)
+        );
+        allow update, delete: if isHouseholdWriter(householdId);
+      }
+
+      // Budgets subcollection
+      match /budgets/{budgetId} {
+        allow get, list: if isHouseholdMember(householdId);
+        allow create: if isSignedIn() && (
+          request.resource.data.createdBy == request.auth.uid ||
+          isHouseholdWriter(householdId)
+        );
+        allow update, delete: if isHouseholdWriter(householdId);
+      }
+
+      // Recurring Rules subcollection
+      match /recurringRules/{ruleId} {
+        allow get, list: if isHouseholdMember(householdId);
+        allow create: if isSignedIn() && (
+          request.resource.data.createdBy == request.auth.uid ||
+          isHouseholdWriter(householdId)
+        );
+        allow update, delete: if isHouseholdWriter(householdId);
+      }
+
+      // Goals subcollection
+      match /goals/{goalId} {
+        allow get, list: if isHouseholdMember(householdId);
+        allow create: if isSignedIn() && (
+          request.resource.data.createdBy == request.auth.uid ||
+          isHouseholdWriter(householdId)
+        );
+        allow update, delete: if isHouseholdWriter(householdId);
+      }
+
+      // Invites subcollection
+      match /invites/{inviteId} {
+        allow get: if isSignedIn();
+        allow list: if isHouseholdOwner(householdId);
+        allow create: if isHouseholdOwner(householdId);
+        allow update: if isSignedIn();
+        allow delete: if isHouseholdOwner(householdId);
+      }
+    }
+
+    // Top-level email_invites for automatic discovery on login
+    match /email_invites/{inviteId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && (
+        resource.data.createdBy == request.auth.uid ||
+        resource.data.email == request.auth.token.email
+      );
+    }
+  }
+}

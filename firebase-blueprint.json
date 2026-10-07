@@ -1,0 +1,209 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 1024 },
+        "currentHouseholdId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "displayName"]
+    },
+    "Household": {
+      "title": "Household",
+      "description": "Family household unit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "currency": { "type": "string", "maxLength": 10 },
+        "timezone": { "type": "string", "maxLength": 64 },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" },
+        "jarsConfig": {
+          "type": "object",
+          "description": "Custom percentage allocation for 6 Jars (NEC, FFA, LTSS, EDU, PLAY, GIVE)"
+        }
+      },
+      "required": ["id", "name", "currency", "createdBy"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Member of a household with role",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "photoURL": { "type": "string", "maxLength": 1024 },
+        "role": { "type": "string", "enum": ["owner", "member", "viewer"] },
+        "joinedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial income, expense, or transfer transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["expense", "income", "transfer"] },
+        "amount": { "type": "number" },
+        "categoryId": { "type": "string", "maxLength": 128 },
+        "accountId": { "type": "string", "maxLength": 128 },
+        "toAccountId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "note": { "type": "string", "maxLength": 500 },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "clientCreatedAt": { "type": "string" },
+        "clientUpdatedAt": { "type": "string" }
+      },
+      "required": ["id", "type", "amount", "accountId", "date", "createdBy"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Transaction category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["expense", "income"] },
+        "icon": { "type": "string", "maxLength": 64 },
+        "color": { "type": "string", "maxLength": 32 },
+        "jar": { "type": "string", "enum": ["NEC", "FFA", "LTSS", "EDU", "PLAY", "GIVE", "INCOME"], "maxLength": 16 },
+        "isArchived": { "type": "boolean" },
+        "isDefault": { "type": "boolean" }
+      },
+      "required": ["id", "name", "type"]
+    },
+    "Account": {
+      "title": "Account",
+      "description": "Financial account or wallet",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["cash", "bank", "ewallet", "card", "other"] },
+        "openingBalance": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "icon": { "type": "string", "maxLength": 64 },
+        "color": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "type", "openingBalance"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Monthly category or overall budget limit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "month": { "type": "string", "maxLength": 16 },
+        "categoryId": { "type": "string", "maxLength": 128 },
+        "amount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "month", "categoryId", "amount"]
+    },
+    "RecurringRule": {
+      "title": "RecurringRule",
+      "description": "Recurring schedule rule for transactions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 128 },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["expense", "income"] },
+        "categoryId": { "type": "string", "maxLength": 128 },
+        "accountId": { "type": "string", "maxLength": 128 },
+        "frequency": { "type": "string", "enum": ["monthly", "weekly", "yearly"] },
+        "nextDueDate": { "type": "string", "maxLength": 32 },
+        "lastProcessedDate": { "type": "string", "maxLength": 32 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "amount", "type", "frequency", "nextDueDate", "active"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Family saving goal or debt payoff plan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "targetDate": { "type": "string", "maxLength": 32 },
+        "color": { "type": "string", "maxLength": 32 },
+        "isDebt": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "targetAmount", "currentAmount"]
+    },
+    "Invite": {
+      "title": "Invite",
+      "description": "Secure invitation token for a household",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "role": { "type": "string", "enum": ["member", "viewer"] },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" },
+        "used": { "type": "boolean" },
+        "expiresAt": { "type": "string" }
+      },
+      "required": ["id", "email", "role", "createdBy", "used"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "Stores user profiles"
+    },
+    "/households/{householdId}": {
+      "schema": "Household",
+      "description": "Household metadata"
+    },
+    "/households/{householdId}/members/{uid}": {
+      "schema": "Member",
+      "description": "Members and roles for the household"
+    },
+    "/households/{householdId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Transactions in the household"
+    },
+    "/households/{householdId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Custom and default categories"
+    },
+    "/households/{householdId}/accounts/{accountId}": {
+      "schema": "Account",
+      "description": "Accounts and wallets"
+    },
+    "/households/{householdId}/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "Household budgets"
+    },
+    "/households/{householdId}/recurringRules/{ruleId}": {
+      "schema": "RecurringRule",
+      "description": "Recurring transaction rules"
+    },
+    "/households/{householdId}/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "Household saving targets"
+    },
+    "/households/{householdId}/invites/{inviteId}": {
+      "schema": "Invite",
+      "description": "Secure invitations for the household"
+    }
+  }
+}
